@@ -5,15 +5,8 @@ on:
     branches:
       - main
 
-jobs:name: Build and Push Docker Image via Kaniko
-
-on:
-  push:
-    branches:
-      - main
-
 permissions:
-  contents: write     # REQUIRED for git push
+  contents: write
 
 jobs:
   kaniko-build:
@@ -21,32 +14,31 @@ jobs:
 
     steps:
 
-      # Checkout repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Auto-generate next version: simpleappversion1,2,3...
       - name: Generate version tag
         id: version
         run: |
-          LAST_TAG=$(grep -o 'simpleappversion[0-9]*' deploy/version.txt | tail -1 | sed 's/simpleappversion//')
-          if [ -z "$LAST_TAG" ]; then
-            NEXT=1
-          else
-            NEXT=$((LAST_TAG + 1))
+          mkdir -p deploy
+          if [ ! -f deploy/version.txt ]; then
+            echo "simpleappversion0" > deploy/version.txt
           fi
-          VERSION="simpleappversion$NEXT"
+
+          LAST_TAG=$(grep -o 'simpleappversion[0-9]*' deploy/version.txt | sed 's/simpleappversion//')
+          NEXT=$((LAST_TAG + 1))
+          VERSION="simpleappversion${NEXT}"
+
           echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "$VERSION" > deploy/version.txt
           echo "Generated version: $VERSION"
-      
-      # Create Docker auth file
+
       - name: Create Docker auth
         run: |
           mkdir -p /home/runner/.docker
           echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"username\":\"${{ secrets.DOCKER_USERNAME }}\",\"password\":\"${{ secrets.DOCKER_PASSWORD }}\"}}}" \
           > /home/runner/.docker/config.json
 
-      # Build & Push image using Kaniko
       - name: Build & Push image
         run: |
           docker run \
@@ -59,75 +51,9 @@ jobs:
             --force \
             --cache=true
 
-      # Update version.txt with new version
-      - name: Update version file
-        run: |
-          echo "${VERSION}" > deploy/version.txt
-          cat deploy/version.txt
-
-      # Commit & push version update
-      - name: Commit & Push
+      - name: Commit & Push updated version
         run: |
           git config --global user.email "ci@github.com"
           git config --global user.name "GitHub Actions"
 
-          git add deploy/version.txt
-          git commit -m "Incremented version to ${VERSION}" || echo "No changes"
-
-          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
-          git push
-
-  kaniko-build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
-
-      # 1️⃣ Read & increment version number
-      - name: Read and increment version
-        id: version
-        run: |
-          # If VERSION file does not exist, create it starting with 1
-          if [ ! -f VERSION ]; then
-            echo "1" > VERSION
-          fi
-
-          CURRENT=$(cat VERSION)
-          NEXT=$((CURRENT + 1))
-
-          echo "$NEXT" > VERSION
-
-          echo "TAG=simpleappversion$NEXT" >> $GITHUB_OUTPUT
-          echo "Next version = $NEXT"
-
-      # 2️⃣ Create Docker auth for Kaniko
-      - name: Create Docker auth
-        run: |
-          mkdir -p /home/runner/.docker
-          echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"username\":\"${{ secrets.DOCKER_USERNAME }}\",\"password\":\"${{ secrets.DOCKER_PASSWORD }}\"}}}" \
-          > /home/runner/.docker/config.json
-          ls -l /home/runner/.docker
-          cat /home/runner/.docker/config.json
-
-      # 3️⃣ Kaniko Build + Push
-      - name: Build & Push image
-        run: |
-          docker run \
-            -v $(pwd):/workspace \
-            -v /home/runner/.docker:/kaniko/.docker:ro \
-            gcr.io/kaniko-project/executor:latest \
-            --context=/workspace \
-            --dockerfile=dockerfile \
-            --destination=docker.io/krajendar/cdacros:${{ steps.version.outputs.TAG }} \
-            --force \
-            --cache=true
-
-      # 4️⃣ Commit updated VERSION back to repo
-      - name: Commit VERSION update
-        run: |
-          git config --global user.email "ci@github.com"
-          git config --global user.name "GitHub Actions"
-          git add VERSION
-          git commit -m "Increment version to ${{ steps.version.outputs.TAG }}"
-          git push
+          git add de
