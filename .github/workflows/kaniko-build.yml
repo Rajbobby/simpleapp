@@ -4,16 +4,18 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:  # optional, allows manual run
+  workflow_dispatch:
 
 jobs:
   kaniko-build:
     runs-on: ubuntu-latest
 
     steps:
+      # 1️⃣ Checkout repository
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # 2️⃣ Configure Docker credentials
       - name: Configure Docker credentials
         run: |
           mkdir -p $HOME/.docker
@@ -21,7 +23,15 @@ jobs:
         env:
           DOCKER_CONFIG: $HOME/.docker/
 
-      - name: Build and push Docker image with Kaniko
+      # 3️⃣ Debug step: verify .docker folder and config.json
+      - name: Debug Docker credentials
+        run: |
+          echo "HOME directory: $HOME"
+          ls -l $HOME/.docker
+          cat $HOME/.docker/config.json
+          
+      # 4️⃣ Build and push Docker image using Kaniko
+      - name: Build and push Docker image
         uses: docker://gcr.io/kaniko-project/executor:latest
         with:
           args: >
