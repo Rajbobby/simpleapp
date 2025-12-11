@@ -11,11 +11,11 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout repository
-      - name: Checkout code
+      # Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2️⃣ Configure Docker credentials
+      # Configure Docker credentials
       - name: Configure Docker credentials
         run: |
           mkdir -p $HOME/.docker
@@ -23,21 +23,21 @@ jobs:
         env:
           DOCKER_CONFIG: $HOME/.docker/
 
-      # 3️⃣ Debug step: verify .docker folder and config.json
+      # Debug .docker folder
       - name: Debug Docker credentials
         run: |
           echo "HOME directory: $HOME"
           ls -l $HOME/.docker
-          cat $HOME/.docker/config.json
-          
-      # 4️⃣ Build and push Docker image using Kaniko
+          cat $HOME/.docker/config.json | sed 's/".*password.*"/"***"/'
+
+      # Build and push Docker image
       - name: Build and push Docker image
         uses: docker://gcr.io/kaniko-project/executor:latest
         with:
           args: >
             --context=${{ github.workspace }}
-            --dockerfile=dockerfile
-            --destination=docker.io/krajendar/demo-argocd:latest
+            --dockerfile=${{ github.workspace }}/dockerfile
+            --destination=docker.io/krajendar/cdacros:simpleappversion1
             --cache=true
         env:
           DOCKER_CONFIG: $HOME/.docker/
