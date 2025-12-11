@@ -29,7 +29,7 @@ jobs:
           args: >
             --context=git://github.com/Rajbobby/simpleapp.git
             --dockerfile=dockerfile
-            --destination=docker.io/demo-argocd/simpleapp:latest
+            --destination=docker.io/krajendar/demo-argocd:latest
             --cache=true
         env:
           DOCKER_CONFIG: $HOME/.docker/
