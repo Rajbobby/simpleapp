@@ -31,6 +31,6 @@ jobs:
             gcr.io/kaniko-project/executor:latest \
             --context=/workspace \
             --dockerfile=dockerfile \
-            --destination=docker.io/krajendar/cdacros:simpleappversion1 \
+            --destination=docker.io/krajendar/cdacros:simpleappversion2 \
             --force \
             --cache=true
