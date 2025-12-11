@@ -26,7 +26,7 @@ jobs:
         with:
           args: >
             --context=${{ github.workspace }}
-            --dockerfile=${{ github.workspace }}/Dockerfile
+            --dockerfile=${{ github.workspace }}/dockerfile
             --destination=docker.io/krajendar/demo-argocd:latest
             --cache=true
         env:
