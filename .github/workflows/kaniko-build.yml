@@ -1,0 +1,26 @@
+name: Build and Push Docker Image via Kaniko
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure Docker credentials
+        run: |
+          mkdir -p /kaniko/.docker
+          echo "{\"auths\":{\"https://index.docker.io/v1/\":{\"username\":\"${{ secrets.DOCKER_USERNAME }}\",\"password\":\"${{ secrets.DOCKER_PASSWORD }}\"}}}" > /kaniko/.docker/config.json
+
+      - name: Build Docker image with Kaniko
+        uses: docker://gcr.io/kaniko-project/executor:latest
+        with:
+          args: >
+            --context=git://github.com/Rajbobby/simpleapp.git
+            --dockerfile=Dockerfile
+            --destination=docker.io/myorg/simpleapp:latest
+        env:
+          DOCKER_CONFIG: /kaniko/.docker/
