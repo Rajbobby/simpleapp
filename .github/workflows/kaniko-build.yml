@@ -3,18 +3,17 @@ name: Build and Push Docker Image via Kaniko
 on:
   push:
     branches:
-      - main  # Trigger build on pushes to main branch
+      - main
+  workflow_dispatch:  # optional, allows manual run
 
 jobs:
   kaniko-build:
     runs-on: ubuntu-latest
 
     steps:
-      # 1️⃣ Checkout code (optional)
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 2️⃣ Configure Docker credentials (fixed permission issue)
       - name: Configure Docker credentials
         run: |
           mkdir -p $HOME/.docker
@@ -22,13 +21,12 @@ jobs:
         env:
           DOCKER_CONFIG: $HOME/.docker/
 
-      # 3️⃣ Build and push Docker image with Kaniko
-      - name: Build Docker image
+      - name: Build and push Docker image with Kaniko
         uses: docker://gcr.io/kaniko-project/executor:latest
         with:
           args: >
-            --context=git://github.com/Rajbobby/simpleapp.git
-            --dockerfile=dockerfile
+            --context=${{ github.workspace }}
+            --dockerfile=${{ github.workspace }}/Dockerfile
             --destination=docker.io/krajendar/demo-argocd:latest
             --cache=true
         env:
