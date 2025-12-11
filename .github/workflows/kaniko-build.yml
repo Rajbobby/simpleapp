@@ -13,7 +13,24 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # 1️⃣ Create the Docker config in $HOME/.docker
+      # 1️⃣ Read & increment version number
+      - name: Read and increment version
+        id: version
+        run: |
+          # If VERSION file does not exist, create it starting with 1
+          if [ ! -f VERSION ]; then
+            echo "1" > VERSION
+          fi
+
+          CURRENT=$(cat VERSION)
+          NEXT=$((CURRENT + 1))
+
+          echo "$NEXT" > VERSION
+
+          echo "TAG=simpleappversion$NEXT" >> $GITHUB_OUTPUT
+          echo "Next version = $NEXT"
+
+      # 2️⃣ Create Docker auth for Kaniko
       - name: Create Docker auth
         run: |
           mkdir -p /home/runner/.docker
@@ -22,7 +39,7 @@ jobs:
           ls -l /home/runner/.docker
           cat /home/runner/.docker/config.json
 
-      # 2️⃣ Run Kaniko with correct volume mount
+      # 3️⃣ Kaniko Build + Push
       - name: Build & Push image
         run: |
           docker run \
@@ -31,6 +48,15 @@ jobs:
             gcr.io/kaniko-project/executor:latest \
             --context=/workspace \
             --dockerfile=dockerfile \
-            --destination=docker.io/krajendar/cdacros:simpleappversion2 \
+            --destination=docker.io/krajendar/cdacros:${{ steps.version.outputs.TAG }} \
             --force \
             --cache=true
+
+      # 4️⃣ Commit updated VERSION back to repo
+      - name: Commit VERSION update
+        run: |
+          git config --global user.email "ci@github.com"
+          git config --global user.name "GitHub Actions"
+          git add VERSION
+          git commit -m "Increment version to ${{ steps.version.outputs.TAG }}"
+          git push
