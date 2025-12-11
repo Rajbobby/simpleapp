@@ -36,7 +36,7 @@ jobs:
         with:
           args: >
             --context=${{ github.workspace }}
-            --dockerfile=${{ github.workspace }}/dockerfile
+            --dockerfile=dockerfile
             --destination=docker.io/krajendar/cdacros:simpleappversion1
             --cache=true
         env:
