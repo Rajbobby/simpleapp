@@ -14,7 +14,7 @@ jobs:
 
     steps:
 
-      - name: Checkout code
+      - name: Checkout application repo
         uses: actions/checkout@v3
 
       - name: Generate version tag
@@ -50,44 +50,44 @@ jobs:
             --force \
             --cache=true
 
-      #########################################################
-      # 🔥 NEW BLOCK → UPDATE deployment.yaml in ArgoCD REPO
-      #########################################################
+      ######################################################################
+      # 🔥 NEW BLOCK — Update deployment.yaml in ArgoCD Repo
+      ######################################################################
 
-      - name: Checkout ArgoCD repo
+      - name: Checkout ArgoCD GitOps repo
         uses: actions/checkout@v3
         with:
           repository: Rajbobby/simpleapp-argocd
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.PAT_TOKEN }}   # ⭐ must use PAT
           path: argocd-repo
 
-      - name: Update deployment.yaml with new image version
+      - name: Update deployment.yaml
         run: |
-          echo "Updating deployment.yaml with image tag: ${VERSION}"
-          sed -i "s|docker.io/krajendar/cdacros:.*|docker.io/krajendar/cdacros:${VERSION}|" argocd-repo/app/deployment.yaml
+          echo "Updating image tag inside ArgoCD deployment.yaml"
+          sed -i "s|docker.io/krajendar/cdacros:.*|docker.io/krajendar/cdacros:${VERSION}|g" argocd-repo/app/deployment.yaml
 
-      - name: Commit & Push update to ArgoCD repo
+      - name: Commit & Push image update to ArgoCD repo
         run: |
           cd argocd-repo
-          git config --global user.email "ci@github.com"
-          git config --global user.name "GitHub Actions"
+          git config user.email "ci@github.com"
+          git config user.name "GitHub Actions"
 
           git add app/deployment.yaml
           git commit -m "Update image to docker.io/krajendar/cdacros:${VERSION}" || echo "No changes to commit"
 
-          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/Rajbobby/simpleapp-argocd.git
+          git push https://${{ secrets.PAT_TOKEN }}@github.com/Rajbobby/simpleapp-argocd.git
 
-      #########################################################
-      # 🎯 END NEW BLOCK
-      #########################################################
+      ######################################################################
+      # END NEW BLOCK
+      ######################################################################
 
       - name: Commit & Push updated version.txt
         run: |
-          git config --global user.email "ci@github.com"
-          git config --global user.name "GitHub Actions"
+          git config user.email "ci@github.com"
+          git config user.name "GitHub Actions"
 
           git add version.txt
           git commit -m "Updated version file to ${VERSION}" || echo "No changes to commit"
 
-          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git remote set-url origin https://${{ secrets.PAT_TOKEN }}@github.com/${{ github.repository }}.git
           git push
