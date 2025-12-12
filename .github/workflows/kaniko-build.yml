@@ -56,4 +56,8 @@ jobs:
           git config --global user.email "ci@github.com"
           git config --global user.name "GitHub Actions"
 
-          git add de
+          git add deploy/VERSION.txt
+          git commit -m "Updated image version to ${VERSION}" || echo "No changes to commit"
+
+          git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
+          git push
