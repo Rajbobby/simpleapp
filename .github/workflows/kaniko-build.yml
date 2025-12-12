@@ -21,16 +21,16 @@ jobs:
         id: version
         run: |
           mkdir -p deploy
-          if [ ! -f deploy/version.txt ]; then
+          if [ ! -f version.txt ]; then
             echo "simpleappversion0" > deploy/version.txt
           fi
 
-          LAST_TAG=$(grep -o 'simpleappversion[0-9]*' deploy/version.txt | sed 's/simpleappversion//')
+          LAST_TAG=$(grep -o 'simpleappversion[0-9]*' version.txt | sed 's/simpleappversion//')
           NEXT=$((LAST_TAG + 1))
           VERSION="simpleappversion${NEXT}"
 
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          echo "$VERSION" > deploy/version.txt
+          echo "$VERSION" > version.txt
           echo "Generated version: $VERSION"
 
       - name: Create Docker auth
@@ -56,7 +56,7 @@ jobs:
           git config --global user.email "ci@github.com"
           git config --global user.name "GitHub Actions"
 
-          git add deploy/VERSION.txt
+          git add version.txt
           git commit -m "Updated image version to ${VERSION}" || echo "No changes to commit"
 
           git remote set-url origin https://${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
